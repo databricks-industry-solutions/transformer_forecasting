@@ -23,3 +23,8 @@ Any issues discovered through the use of this project should be filed as GitHub 
 | library                                | description             | license    | source                                              |
 |----------------------------------------|-------------------------|------------|-----------------------------------------------------|
 | chronos | A family of pretrained time series forecasting models based on language model architectures  | Apache 2.0  | [https://pypi.org/project/chronos/](https://github.com/amazon-science/chronos-forecasting) |
+| moirai | | | |
+| moment | | | |
+| timegpt | | | |
+| timesfm | | | |
+
