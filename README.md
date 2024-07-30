@@ -1,16 +1,14 @@
-<img src=https://raw.githubusercontent.com/databricks-industry-solutions/.github/main/profile/solacc_logo.png width="600px">
+o<img src=https://raw.githubusercontent.com/databricks-industry-solutions/.github/main/profile/solacc_logo.png width="600px">
 
 [![DBR](https://img.shields.io/badge/DBR-CHANGE_ME-red?logo=databricks&style=for-the-badge)](https://docs.databricks.com/release-notes/runtime/CHANGE_ME.html)
 [![CLOUD](https://img.shields.io/badge/CLOUD-CHANGE_ME-blue?logo=googlecloud&style=for-the-badge)](https://databricks.com/try-databricks)
 
 ## Business Problem
-WHAT IS THE BUSINESS PROBLEM ADDRESSED BY THIS SOLUTION
-
-## Reference Architecture
-IMAGE TO REFERENCE ARCHITECTURE
+This solution accelerator demonstrates how to use various generative AI forecasting models from within Databricks.
 
 ## Authors
-<john.doe@databricks.com>
+Ryuta Yoshimatsu <ryuta.yoshimatsu@databricks.com>
+Puneet Jain <puneet.jain@databricks.com>
 
 ## Project support 
 
@@ -24,3 +22,4 @@ Any issues discovered through the use of this project should be filed as GitHub 
 
 | library                                | description             | license    | source                                              |
 |----------------------------------------|-------------------------|------------|-----------------------------------------------------|
+| chronos | A family of pretrained time series forecasting models based on language model architectures  | Apache 2.0  | [https://pypi.org/project/chronos/](https://github.com/amazon-science/chronos-forecasting) |
