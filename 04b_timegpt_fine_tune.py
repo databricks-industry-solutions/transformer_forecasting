@@ -41,7 +41,6 @@
 # COMMAND ----------
 
 model_url = '<input timegen-1 endpoint uri here>'
-model_url = 'https://TimeGEN-1-bxuow.westus.models.ai.azure.com'
 
 # COMMAND ----------
 
@@ -70,7 +69,6 @@ try:
 except:
   pass
 w.secrets.put_secret(scope=scope_name, key=key_name, string_value='<input timegen-1 api key here>')
-w.secrets.put_secret(scope=scope_name, key=key_name, string_value='NT3JhcRYxLF1EfiQe2i5kXC58cV1xsaf')
 
 # COMMAND ----------
 
