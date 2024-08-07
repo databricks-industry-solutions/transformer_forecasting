@@ -1,5 +1,3 @@
-%md
-
 DB license
 Definitions. 
 
