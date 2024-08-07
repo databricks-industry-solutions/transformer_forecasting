@@ -26,6 +26,6 @@ Any issues discovered through the use of this project should be filed as GitHub 
 | chronos | A family of pretrained time series forecasting models based on language model architectures  | Apache 2.0  | https://github.com/amazon-science/chronos-forecasting|
 | moirai | The Masked Encoder-based Universal Time Series Forecasting Transformer, a Large Time Series Model pre-trained on LOTSA data | Apache 2.0 |https://huggingface.co/collections/Salesforce/moirai-10-r-models-65c8d3a94c51428c300e0742 |
 | moment | A family of open-source foundation models for general-purpose time-series analysis | MIT License | https://github.com/moment-timeseries-foundation-model/moment |
-| timegpt | A production ready, generative pretrained transformer for time series | Nixtla | https://github.com/Nixtla/nixtla |
+| timegpt | A production ready, generative pretrained transformer for time series | Apache | https://github.com/Nixtla/nixtla |
 | timesfm | A pretrained time-series foundation model developed by Google Research for time-series forecasting| Apache 2.0 | https://github.com/google-research/timesfm |
 
