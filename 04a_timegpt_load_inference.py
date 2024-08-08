@@ -37,6 +37,22 @@
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ##Set the logging level
+
+# COMMAND ----------
+
+import logging
+
+logger = spark._jvm.org.apache.log4j
+
+# Setting the logging level to ERROR for the "py4j.java_gateway" logger
+# This reduces the verbosity of the logs by only showing error messages
+logging.getLogger("py4j.java_gateway").setLevel(logging.ERROR)
+logging.getLogger("py4j.clientserver").setLevel(logging.ERROR)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Record the TimeGen-1 Endpoint Target URI
 
 # COMMAND ----------
