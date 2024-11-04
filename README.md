@@ -1,7 +1,6 @@
 <img src=https://raw.githubusercontent.com/databricks-industry-solutions/.github/main/profile/solacc_logo.png width="600px">
 
-[![DBR](https://img.shields.io/badge/DBR-CHANGE_ME-red?logo=databricks&style=for-the-badge)](https://docs.databricks.com/release-notes/runtime/CHANGE_ME.html)
-[![CLOUD](https://img.shields.io/badge/CLOUD-CHANGE_ME-blue?logo=googlecloud&style=for-the-badge)](https://databricks.com/try-databricks)
+_Check out the full blog [here](https://www.databricks.com/blog/introduction-time-series-forecasting-generative-ai)_
 
 ## Business Problem
 This solution accelerator demonstrates how to use various generative AI forecasting models from within Databricks.
