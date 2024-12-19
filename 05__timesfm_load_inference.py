@@ -7,9 +7,7 @@
 # MAGIC %md
 # MAGIC ## Cluster setup
 # MAGIC
-# MAGIC **As of June 5, 2024, TimesFM supports python version below 3.10. Make sure your cluster is DBR ML 14.3.**
-# MAGIC
-# MAGIC We recommend using a cluster with [Databricks Runtime 14.3 LTS for ML](https://docs.databricks.com/en/release-notes/runtime/14.3lts-ml.html). The cluster can be single-node or multi-node with one or more GPU instances on each worker: e.g. [g5.2xlarge [A10G]](https://aws.amazon.com/ec2/instance-types/g5/) on AWS or [Standard_NV72ads_A10_v5](https://learn.microsoft.com/en-us/azure/virtual-machines/nva10v5-series) on Azure. This notebook will leverage [Pandas UDF](https://docs.databricks.com/en/udf/pandas.html) for distributing the inference tasks and utilizing all the available resource.
+# MAGIC We recommend using a cluster with [Databricks Runtime 15.4 LTS for ML](https://docs.databricks.com/en/release-notes/runtime/14.3lts-ml.html). The cluster can be single-node or multi-node with one or more GPU instances on each worker: e.g. [g5.2xlarge [A10G]](https://aws.amazon.com/ec2/instance-types/g5/) on AWS or [Standard_NV72ads_A10_v5](https://learn.microsoft.com/en-us/azure/virtual-machines/nva10v5-series) on Azure.
 
 # COMMAND ----------
 
@@ -18,17 +16,24 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install jax[cuda12]==0.4.26 --quiet
-# MAGIC %pip install protobuf==3.20.* --quiet
-# MAGIC %pip install utilsforecast --quiet
+# MAGIC %pip install timesfm[torch] --quiet
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-import sys
-import subprocess
-package = "git+https://github.com/google-research/timesfm.git"
-subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--quiet"])
+# MAGIC %md
+# MAGIC ##Set the logging level
+
+# COMMAND ----------
+
+import logging
+
+logger = spark._jvm.org.apache.log4j
+
+# Setting the logging level to ERROR for the "py4j.java_gateway" logger
+# This reduces the verbosity of the logs by only showing error messages
+logging.getLogger("py4j.java_gateway").setLevel(logging.ERROR)
+logging.getLogger("py4j.clientserver").setLevel(logging.ERROR)
 
 # COMMAND ----------
 
@@ -73,17 +78,14 @@ import timesfm
 
 # Initialize the TimesFm model with specified parameters.
 tfm = timesfm.TimesFm(
-    context_len=512,  # Max context length of the model. It must be a multiple of input_patch_len, which is 32.
-    horizon_len=10,  # Forecast horizon length. It can be set to any value, recommended to be the largest needed.
-    input_patch_len=32,  # Length of the input patch.
-    output_patch_len=128,  # Length of the output patch.
-    num_layers=20,
-    model_dims=1280,
-    backend="cpu",  # Backend for computation, set to gpu for faster processing.
+    hparams=timesfm.TimesFmHparams(
+        backend="gpu",
+        per_core_batch_size=32,
+        horizon_len=10,
+    ),
+    checkpoint=timesfm.TimesFmCheckpoint(
+        huggingface_repo_id="google/timesfm-1.0-200m-pytorch"),
 )
-
-# Load the pre-trained model from the specified checkpoint.
-tfm.load_from_checkpoint(repo_id="google/timesfm-1.0-200m")
 
 # Generate forecasts on the input DataFrame.
 forecast_df = tfm.forecast_on_df(
@@ -95,7 +97,6 @@ forecast_df = tfm.forecast_on_df(
 
 # Display the forecast DataFrame.
 display(forecast_df)
-
 
 # COMMAND ----------
 
@@ -129,20 +130,19 @@ class TimesFMModel(mlflow.pyfunc.PythonModel):
         self.tfm = None  # Initialize the model attribute to None
 
     def load_model(self):
-        import timesfm
         # Initialize the TimesFm model with specified parameters
+        import timesfm
         self.tfm = timesfm.TimesFm(
-            context_len=512,  # Max context length of the model, must be a multiple of input_patch_len (32).
-            horizon_len=10,  # Horizon length for the forecast.
-            input_patch_len=32,  # Length of the input patch.
-            output_patch_len=128,  # Length of the output patch.
-            num_layers=20,
-            model_dims=1280,
-            backend="cpu",  # Backend for computation, set to gpu for faster processing.
-        )
-        # Load the pre-trained model from the specified checkpoint
-        self.tfm.load_from_checkpoint(repo_id=self.repository)
-
+            hparams=timesfm.TimesFmHparams(
+                backend="gpu",
+                per_core_batch_size=32,
+                horizon_len=10,
+                ),
+            checkpoint=timesfm.TimesFmCheckpoint(
+                huggingface_repo_id=self.repository
+                ),
+            )
+        
     def predict(self, context, input_df, params=None):
         # Load the model if it hasn't been loaded yet
         if self.tfm is None:
@@ -156,20 +156,9 @@ class TimesFMModel(mlflow.pyfunc.PythonModel):
         )
         return forecast_df  # Return the forecast DataFrame
 
-    def __getstate__(self):
-        state = self.__dict__.copy()  # Copy the instance's state
-        # Remove the tfm attribute from the state, as it's not serializable
-        del state['tfm']
-        return state
-
-    def __setstate__(self, state):
-        # Restore instance attributes
-        self.__dict__.update(state)
-        # Reload the model since it was not stored in the state
-        self.load_model()
 
 # Initialize the custom TimesFM model with the specified repository ID
-pipeline = TimesFMModel("google/timesfm-1.0-200m")
+pipeline = TimesFMModel("google/timesfm-1.0-200m-pytorch")
 # Infer the model signature based on input and output DataFrames
 signature = infer_signature(
     model_input=df,  # Input DataFrame for the model
@@ -177,7 +166,7 @@ signature = infer_signature(
 )
 
 # Define the registered model name using variables for catalog and database
-registered_model_name = f"{catalog}.{db}.timesfm-1-200m"
+registered_model_name = f"{catalog}.{db}.timesfm-1-200m-pytorch"
 
 # set current experiment
 mlflow.set_experiment(experiment_name)
@@ -190,11 +179,7 @@ with mlflow.start_run() as run:
         registered_model_name=registered_model_name,  # The name to register the model under
         signature=signature,  # The model signature
         input_example=df,  # An example input to log with the model
-        pip_requirements=[
-            "jax[cuda12]==0.4.26",  # Required Python packages
-            "utilsforecast==0.1.10",
-            "git+https://github.com/google-research/timesfm.git",
-        ],
+        pip_requirements=["timesfm[torch]"],
     )
 
 # COMMAND ----------
@@ -234,8 +219,6 @@ loaded_model.predict(df)  # Use the loaded model to make predictions on the inpu
 # MAGIC %md
 # MAGIC ## Deploy Model
 # MAGIC We will deploy our model behind a real-time endpoint of [Databricks Mosaic AI Model Serving](https://www.databricks.com/product/model-serving).
-# MAGIC
-# MAGIC **Disclaimer**: TimesFM model deployment on Model Serving endpoint (below cells) does not work until the issue reported here is resolved https://github.com/google-research/timesfm/issues/41
 
 # COMMAND ----------
 
@@ -265,11 +248,11 @@ my_json = {
             {
                 "model_name": registered_model_name,
                 "model_version": model_version,
-                "workload_type": "CPU",
+                "workload_type": "GPU_SMALL",
                 "workload_size": "Small",
                 "scale_to_zero_enabled": "true",
                 "environment_vars":{
-                    "JAX_PLATFORMS": "cpu"
+                    "JAX_PLATFORMS": "gpu"
                 }
             }
         ],
@@ -418,7 +401,7 @@ def forecast(input_data, url=endpoint_url, databricks_token=token):
         "Authorization": f"Bearer {databricks_token}",
         "Content-Type": "application/json",
     }
-    body = {"inputs": input_data.tolist()}
+    body = {"inputs": input_data.to_dict(orient='records')}
     data = json.dumps(body)
     response = requests.request(method="POST", headers=headers, url=url, data=data)
     if response.status_code != 200:
@@ -430,6 +413,8 @@ def forecast(input_data, url=endpoint_url, databricks_token=token):
 # COMMAND ----------
 
 # Send request to the endpoint
+df = spark.table(f'{catalog}.{db}.m4_daily_train').toPandas()
+df['ds'] = df['ds'].astype(str)  # Convert Timestamp to string
 forecast(df)
 
 # COMMAND ----------
