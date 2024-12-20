@@ -16,7 +16,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install git+https://github.com/amazon-science/chronos-forecasting.git --quiet
+# MAGIC %pip install chronos-forecasting --quiet
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -123,11 +123,15 @@ def create_forecast_udf(repository, prediction_length, num_samples, batch_size):
         import numpy as np
         import pandas as pd
         import torch
-        from chronos import ChronosPipeline
+        from chronos import BaseChronosPipeline
         
         # Load the pretrained model from the repository
-        pipeline = ChronosPipeline.from_pretrained(repository, device_map="auto", torch_dtype=torch.bfloat16)
-        
+        pipeline = BaseChronosPipeline.from_pretrained(
+            repository,  # use "amazon/chronos-bolt-small" for the corresponding Chronos-Bolt model
+            device_map="cuda",  # use "cpu" for CPU inference
+            torch_dtype=torch.bfloat16,
+            )
+
         # Inference step
         for bulk in bulk_iterator:
             median = []  # List to hold the median forecast for each series
@@ -201,6 +205,9 @@ display(forecasts)
 
 import mlflow
 import torch
+import torchvision
+import cloudpickle
+import transformers
 import numpy as np
 from mlflow.models.signature import ModelSignature
 from mlflow.types import DataType, Schema, TensorSpec
@@ -213,14 +220,14 @@ experiment_name = "/Shared/chronos/"
 class ChronosModel(mlflow.pyfunc.PythonModel):
     def __init__(self, repository):
         import torch
-        from chronos import ChronosPipeline
+        from chronos import BaseChronosPipeline
         # Initialize the ChronosPipeline with a pretrained model from the specified repository
-        self.pipeline = ChronosPipeline.from_pretrained(
-            repository,
-            device_map="cuda",          # Use GPU for inference
-            torch_dtype=torch.bfloat16, # Use bfloat16 precision
-        )  
-    
+        self.pipeline = BaseChronosPipeline.from_pretrained(
+            repository,         # use "amazon/chronos-bolt-small" for the corresponding Chronos-Bolt model
+            device_map="cuda",  # use "cpu" for CPU inference
+            torch_dtype=torch.bfloat16,
+            )
+
     def predict(self, context, input_data, params=None):
         # Convert input data to a list of PyTorch tensors
         history = [torch.tensor(list(series)) for series in input_data]
@@ -258,7 +265,11 @@ with mlflow.start_run() as run:
       signature=signature,             # Model signature
       input_example=input_example,     # Example input
       pip_requirements=[               # List of pip requirements
-        f"git+https://github.com/amazon-science/chronos-forecasting.git",
+            "torch==" + torch.__version__.split("+")[0],
+            "torchvision==" + torchvision.__version__.split("+")[0],
+            "transformers==" + transformers.__version__,
+            "cloudpickle==" + cloudpickle.__version__,
+            "chronos-forecasting",
         ],
       )
 

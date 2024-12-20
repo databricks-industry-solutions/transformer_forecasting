@@ -17,7 +17,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install "chronos[training] @ git+https://github.com/amazon-science/chronos-forecasting.git" --quiet
+# MAGIC %pip install "chronos-forecasting[training] @ git+https://github.com/amazon-science/chronos-forecasting.git" --quiet
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -161,6 +161,9 @@ import os
 import glob
 import mlflow
 import torch
+import torchvision
+import cloudpickle
+import transformers
 import numpy as np
 from mlflow.models.signature import ModelSignature
 from mlflow.types import DataType, Schema, TensorSpec
@@ -242,7 +245,11 @@ with mlflow.start_run() as run:
         signature=signature,
         input_example=input_example,
         pip_requirements=[
-            "chronos[training] @ git+https://github.com/amazon-science/chronos-forecasting.git",
+            "torch==" + torch.__version__.split("+")[0],
+            "torchvision==" + torchvision.__version__.split("+")[0],
+            "transformers==" + transformers.__version__,
+            "cloudpickle==" + cloudpickle.__version__,
+            "chronos-forecasting[training] @ git+https://github.com/amazon-science/chronos-forecasting.git",
         ],
     )
 
@@ -300,7 +307,6 @@ input_data = df["y"][:100].to_numpy() # Shape should be (batch, series)
 
 # Generate forecasts using the loaded model
 loaded_model.predict(input_data)
-
 
 # COMMAND ----------
 
