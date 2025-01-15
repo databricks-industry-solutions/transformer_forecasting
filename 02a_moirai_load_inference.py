@@ -16,7 +16,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install git+https://github.com/SalesforceAIResearch/uni2ts.git --quiet
+# MAGIC %pip install uni2ts --quiet
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -169,7 +169,7 @@ def create_forecast_udf(repository, prediction_length, patch_size, num_samples):
 
 # COMMAND ----------
 
-model = "moirai-1.0-R-small"  # Alternatibely moirai-1.0-R-base, moirai-1.0-R-large
+model = "moirai-1.1-R-small"  # Alternatibely moirai-1.1-R-base, moirai-1.1-R-large
 prediction_length = 10  # Time horizon for forecasting
 num_samples = 10  # Number of forecast to generate. We will take median as our final forecast.
 patch_size = 32  # Patch size: choose from {"auto", 8, 16, 32, 64, 128}
@@ -294,7 +294,7 @@ signature = ModelSignature(inputs=input_schema, outputs=output_schema)
 input_example = np.random.rand(52)
 
 # Define the registered model name
-registered_model_name = f"{catalog}.{db}.moirai-1-r-small"
+registered_model_name = f"{catalog}.{db}.moirai-1-1-r-small"
 
 # set current experiment
 mlflow.set_experiment(experiment_name)
@@ -308,7 +308,7 @@ with mlflow.start_run() as run:
         signature=signature,  # The model signature
         input_example=input_example,  # An example of the input data
         pip_requirements=[
-            "git+https://github.com/SalesforceAIResearch/uni2ts.git",
+            "uni2ts",
         ],
     )
 
@@ -393,7 +393,7 @@ instance = tags["browserHostName"]
 
 import requests
 
-model_serving_endpoint_name = "moirai-1-r-small"
+model_serving_endpoint_name = "moirai-1-1-r-small"
 
 # auto_capture_config specifies where the inference logs should be written
 my_json = {

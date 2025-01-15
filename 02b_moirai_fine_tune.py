@@ -15,7 +15,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install git+https://github.com/SalesforceAIResearch/uni2ts.git --quiet
+# MAGIC %pip install uni2ts --quiet
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -31,7 +31,7 @@
 catalog = "tsfm"  # Name of the catalog we use to manage our assets
 db = "random"  # Name of the schema we use to manage our assets (e.g. datasets)
 volume = "moirai_fine_tune" # Name of the volume we store the data and the weigts
-model = "moirai-1.0-R-small"  # Alternatibely: moirai-1.0-R-base, moirai-1.0-R-large
+model = "moirai-1.1-R-small"  # Alternatibely: moirai-1.0-R-base, moirai-1.0-R-large
 n = 100  # Number of time series to sample
 
 # COMMAND ----------
@@ -138,7 +138,7 @@ os.environ['CUSTOM_DATA_PATH'] = f"/Volumes/{catalog}/{db}/{volume}"
 # MAGIC %sh python moirai_train.py \
 # MAGIC   -cp configs/moirai \
 # MAGIC   run_name=random_run \
-# MAGIC   model=moirai_1.0_R_small \
+# MAGIC   model=moirai_1.1_R_small \
 # MAGIC   data=random \
 # MAGIC   val_data=random
 
@@ -211,10 +211,10 @@ signature = ModelSignature(inputs=input_schema, outputs=output_schema)
 input_example = np.random.rand(52)
 
 # Define the registered model name using variables for catalog, database, and volume
-registered_model_name = f"{catalog}.{db}.moirai-1-r-small_finetuned"
+registered_model_name = f"{catalog}.{db}.moirai-1-1-r-small_finetuned"
 
 # Define the path to the model weights
-weights = f"/Volumes/{catalog}/{db}/{volume}/outputs/moirai_1.0_R_small/random/random_run/checkpoints/epoch=0-step=100.ckpt"
+weights = f"/Volumes/{catalog}/{db}/{volume}/outputs/moirai_1.1_R_small/random/random_run/checkpoints/epoch=0-step=100.ckpt"
 
 # set current experiment
 mlflow.set_experiment(experiment_name)
@@ -229,7 +229,7 @@ with mlflow.start_run() as run:
         signature=signature,  # The model signature
         input_example=input_example,  # An example input to log with the model
         pip_requirements=[
-            "git+https://github.com/SalesforceAIResearch/uni2ts.git",
+            "uni2ts",
         ],  # The Python packages required to run the model
     )
 
