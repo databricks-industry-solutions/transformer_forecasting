@@ -1,9 +1,9 @@
-_target_: uni2ts.data.builder.ConcatDatasetBuilder
-_args_:
-  _target_: uni2ts.data.builder.simple.generate_eval_builders
-  dataset: random_eval
-  offset: 273
-  eval_length: 10
-  prediction_lengths: [10]
-  context_lengths: [270]
-  patch_sizes: [32, 64]
+_target_: uni2ts.data.builder.simple.generate_eval_builder
+dataset: random_eval
+offset: 640
+eval_length: 455
+prediction_length: 10
+context_length: 270
+patch_size: 32
+mode: S
+distance: 1

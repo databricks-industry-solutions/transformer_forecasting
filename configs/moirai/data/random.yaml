@@ -1,3 +1,8 @@
-_target_: uni2ts.data.builder.simple.SimpleDatasetBuilder
+_target_: uni2ts.data.builder.simple.generate_finetune_builder
 dataset: random
-weight: 1000
+train_length: 455
+prediction_length: 10
+context_length: 270
+patch_size: 32
+mode: S
+distance: 1
